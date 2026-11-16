@@ -1,0 +1,19 @@
+{
+  "version": "Демо · 2026.1",
+  "demoCities": true,
+  "currency": "UAH",
+  "perKmGrossUah": 24,
+  "minimumVisitGrossUah": 10000,
+  "hourlyGrossUah": 2226,
+  "minimumHours": 3,
+  "zoneWidthKm": 150,
+  "additionalZoneGrossUah": 5000,
+  "vatRate": 0.2,
+  "cities": [
+    {"id": "kyiv", "name": "Київ", "coordinates": [30.5234, 50.4501]},
+    {"id": "lviv", "name": "Львів", "coordinates": [24.0316, 49.8429]},
+    {"id": "kharkiv", "name": "Харків", "coordinates": [36.2304, 49.9935]},
+    {"id": "dnipro", "name": "Дніпро", "coordinates": [35.0462, 48.4647]},
+    {"id": "odesa", "name": "Одеса", "coordinates": [30.7233, 46.4825]}
+  ]
+}

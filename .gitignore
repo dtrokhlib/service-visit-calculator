@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.local
+
+# Local business context and developer files
+service_visit_codex_context.md
+.DS_Store
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
