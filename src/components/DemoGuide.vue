@@ -1,0 +1,37 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { calculate, money, number } from '../lib/calculator'
+import type { Config, Model } from '../lib/calculator'
+const props = defineProps<{ config: Config; model: Model }>()
+const work = computed(() => calculate(0, props.model, props.config).work)
+const examples = computed(() => {
+  const width = props.config.zoneWidthKm
+  const distances = [0, width, width + 0.1, width * 2, width * 2 + 0.1, width * 3]
+  return distances.map(km => ({ km, kmPrice: calculate(km, 'kilometers', props.config), zonePrice: calculate(km, 'zones', props.config) }))
+})
+const workedExample = computed(() => {
+  const km = props.config.zoneWidthKm * 2
+  return { km, price: calculate(km, props.model, props.config) }
+})
+</script>
+<template>
+  <section id="demo-guide" class="demo-guide no-print" aria-labelledby="guide-title">
+    <div class="guide-heading"><div><span class="section-kicker">ФОРМУЛИ ТА ВХІДНІ ДАНІ</span><h2 id="guide-title">Пояснення розрахунку</h2></div><span class="guide-label">Усі суми з ПДВ</span></div>
+    <p class="guide-lead">Демо допомагає порівняти дві тарифні моделі. В обох випадках підсумок складається з двох частин: дороги та мінімальної оплати роботи інженера.</p>
+    <div class="guide-grid">
+      <article class="guide-panel"><h3>01 / Вартість виїзду</h3>
+        <template v-if="model === 'kilometers'"><p>Відстань в один бік множимо на 2, щоб врахувати повернення, та на {{ money(config.perKmGrossUah) }} за кілометр. Якщо результат нижчий за {{ money(config.minimumVisitGrossUah) }}, діє мінімальна ціна виїзду.</p><div class="formula-box">Більше з двох: {{ money(config.minimumVisitGrossUah) }}<br>або відстань × 2 × {{ money(config.perKmGrossUah) }}</div><p>Мінімум є нижньою межею транспортної складової. Він не додається поверх оплати кілометрів.</p></template>
+        <template v-else><p>Ділимо відстань в один бік на зони по {{ number(config.zoneWidthKm) }} км. Перша коштує {{ money(config.minimumVisitGrossUah) }}, кожна наступна додає {{ money(config.additionalZoneGrossUah) }}.</p><div class="formula-box">{{ money(config.minimumVisitGrossUah) }}<br>+ (номер зони − 1) × {{ money(config.additionalZoneGrossUah) }}</div><p>{{ number(config.zoneWidthKm) }} км — ще перша зона, {{ number(config.zoneWidthKm + 0.1) }} км — уже друга. Дорога назад врахована в тарифі зони; множити суму на 2 не потрібно.</p></template>
+      </article>
+      <article class="guide-panel"><h3>02 / Робота інженера</h3><p>До вартості виїзду окремо додаємо мінімальну оплату {{ number(config.minimumHours) }} годин роботи. Вона однакова для всіх міст і обох моделей.</p><div class="formula-box">{{ number(config.minimumHours) }} год × {{ money(config.hourlyGrossUah) }}<br>= {{ money(work) }}</div><p>Це мінімальна оплачувана робота, а не прогноз тривалості ремонту. Додаткові години й інші витрати цей демонстраційний розрахунок не включає.</p></article>
+    </div>
+    <article class="worked-example"><span class="section-kicker">ПРИКЛАД · {{ model === 'kilometers' ? 'ЗА КІЛОМЕТРАЖЕМ' : 'ЗА ЗОНАМИ' }}</span><h3>Приклад: відстань в один бік {{ number(workedExample.km) }} км</h3><p v-if="model === 'kilometers'">{{ number(workedExample.km) }} км × 2 × {{ money(config.perKmGrossUah) }} = {{ money(workedExample.km * 2 * config.perKmGrossUah) }}. Порівнюємо з мінімумом {{ money(config.minimumVisitGrossUah) }} і беремо більшу суму.</p><p v-else>Це зона №{{ workedExample.price.zone }}. Виїзд: {{ money(config.minimumVisitGrossUah) }} + {{ workedExample.price.zone - 1 }} × {{ money(config.additionalZoneGrossUah) }} = {{ money(workedExample.price.visit) }}.</p><div class="example-total"><span>Виїзд {{ money(workedExample.price.visit) }} + робота {{ money(workedExample.price.work) }}</span><strong>{{ money(workedExample.price.total) }}</strong></div><p>У тому числі ПДВ {{ number(config.vatRate * 100) }}% — {{ money(workedExample.price.vat) }}. Без ПДВ — {{ money(workedExample.price.net) }}. ПДВ виділяємо з підсумку, повторно його не додаємо.</p></article>
+    <h3 class="comparison-title">Порівняння підсумкових сум на межах зон</h3>
+    <p class="guide-lead">У таблиці вже враховано виїзд, {{ number(config.minimumHours) }} години роботи та ПДВ. Приклади відстаней умовні й не пов’язані з конкретними містами.</p>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Порівняння моделей на межах зон"><table class="comparison-table"><thead><tr><th scope="col">В один бік</th><th scope="col">Зона</th><th scope="col" :class="{ 'active-model': model === 'kilometers' }">За кілометражем · разом</th><th scope="col" :class="{ 'active-model': model === 'zones' }">За зонами · разом</th></tr></thead><tbody><tr v-for="example in examples" :key="example.km"><th scope="row">{{ number(example.km) }} км</th><td>{{ example.zonePrice.zone }}</td><td :class="{ 'active-model': model === 'kilometers' }">{{ money(example.kmPrice.total) }}</td><td :class="{ 'active-model': model === 'zones' }">{{ money(example.zonePrice.total) }}</td></tr></tbody></table></div>
+    <p class="guide-lead">За кілометражем ціна зростає поступово після перевищення мінімуму. За зонами вона стала всередині зони й зростає стрибком на її межі. Для перегляду прайсу в першій моделі достатньо змінити мінімум і ставку за км, у другій — базу й доплату за зону. Тариф роботи переглядається окремо.</p>
+    <section class="engineer-section" aria-labelledby="engineers-title"><div class="guide-heading"><div><span class="section-kicker">ТОЧКИ ВІДЛІКУ МАРШРУТІВ</span><h2 id="engineers-title">{{ config.demoCities ? 'Приклад розміщення інженерів' : 'Міста виїзду інженерів' }}</h2></div><span class="guide-label">{{ config.cities.length }} міст у розрахунку</span></div><p class="guide-lead">{{ config.demoCities ? 'Це демонстраційний список міст, а не підтверджений штат чи графік роботи. Кожна картка позначає місто виїзду, а не конкретну людину.' : 'Для кожної адреси перевіряємо маршрути з усіх перелічених міст. Список не містить інформації про кількість інженерів або їхню поточну доступність.' }}</p><ul class="engineer-cities"><li v-for="(city, index) in config.cities" :key="city.id"><span class="engineer-index">{{ String(index + 1).padStart(2, '0') }}</span><div><strong>{{ city.name }}</strong><span>Місто виїзду</span></div><span class="city-dot" aria-hidden="true"></span></li></ul><p class="guide-lead">Відлік ведемо від точки міста, не від поточної GPS-позиції інженера. Для {{ config.cities.length }} міст і 2 адрес отримаємо {{ config.cities.length * 2 }} варіантів: по одному на кожну пару «місто → адреса».</p></section>
+    <div class="guide-grid guide-notes"><article><h3>Як читати звіт</h3><p>Кожен рядок — альтернативний виїзд з певного міста. Ці суми не складаються. Можна вибрати дорожчий виїзд, якщо інженер із цього міста доступний раніше; дату приїзду потрібно уточнювати окремо. Для різних адрес у демо рахуються окремі поїздки.</p></article><article><h3>Що ще потрібно погодити</h3><p>Формула єдина для всіх, але ціна залежить від міста відправлення. Якщо вартість має бути незалежною від фактичного розміщення інженерів, потрібно затвердити постійні розрахункові бази та правило їх вибору або територіальні зони. Поточні тарифи демонстраційні.</p></article></div>
+    <p class="guide-lead">Для збереження результату натисніть «Друк / Зберегти PDF» біля розрахунку та виберіть PDF у діалозі браузера. До звіту потрапляють таблиці й правила поточної моделі.</p>
+  </section>
+</template>

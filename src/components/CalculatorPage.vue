@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import AddressField from './AddressField.vue'
+import DemoGuide from './DemoGuide.vue'
 import { calculate, money, number } from '../lib/calculator'
 import type { Model } from '../lib/calculator'
 import { getDistances } from '../lib/geoapify'
@@ -44,21 +45,31 @@ function rows(location: Location) {
   })
 }
 function print() { window.print() }
+function scrollToGuide() { document.getElementById('demo-guide')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
 </script>
 <template>
   <div class="page-top no-print"><span>Сервіс</span><span class="crumb-separator">/</span><span>Калькулятор виїзду</span><span class="version">{{ config.version }}</span></div>
-  <section class="intro no-print">
-    <div><div class="eyebrow"><span></span> ПЛАНУЙТЕ СЕРВІС ЗАЗДАЛЕГІДЬ</div><h1>Вартість виїзду.<br><span>Прозоро до кілометра.</span></h1><p>Додайте ваші локації та порівняйте вартість виїзду<br class="desktop-break"> інженерів із різних міст. Усі ціни вже з ПДВ.</p></div>
-    <div class="intro-aside"><span class="outline-arrow" aria-hidden="true">↗</span><span>Ваше обладнання.<br>Наша експертиза.</span></div>
+  <section class="intro technical-intro no-print">
+    <div><h1>Порівняння варіантів оплати виїзду</h1><p>Мета: вибрати просте єдине правило розрахунку та параметри для перегляду тарифів.<br>Наведені суми й міста — приклад для погодження. Усі тарифи включають ПДВ.</p></div>
   </section>
   <nav class="model-tabs no-print" aria-label="Модель розрахунку">
     <RouterLink to="/kilometers" :aria-current="isKm ? 'page' : undefined"><span class="tab-number">01</span> За кілометражем <span class="tab-arrow">↗</span></RouterLink>
     <RouterLink to="/zones" :aria-current="!isKm ? 'page' : undefined"><span class="tab-number">02</span> За зонами <span class="tab-arrow">↗</span></RouterLink>
-    <span class="tabs-hint">Дві моделі. Оберіть зручну.</span>
+    <span class="tabs-hint">Поточна модель застосовується до всіх адрес.</span>
   </nav>
+  <section class="demo-overview no-print" aria-labelledby="overview-title">
+    <div class="guide-heading"><h2 id="overview-title">Що порівнюємо</h2><a href="#demo-guide" @click.prevent="scrollToGuide">Числові приклади та список міст ↓</a></div>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Відмінності тарифних моделей"><table class="model-summary"><thead><tr><th scope="col">Модель</th><th scope="col">Правило оплати виїзду</th><th scope="col">Поведінка ціни</th><th scope="col">Що змінювати при перегляді тарифу</th></tr></thead><tbody>
+      <tr :class="{ 'active-model': isKm }"><th scope="row">1. За кілометражем</th><td>Більше з двох: {{ money(config.minimumVisitGrossUah) }} або км в один бік × 2 × {{ money(config.perKmGrossUah) }}</td><td>Мінімум на коротких маршрутах, далі зростання за кожен км.</td><td>Мінімум виїзду та ставку за км.</td></tr>
+      <tr :class="{ 'active-model': !isKm }"><th scope="row">2. За зонами</th><td>{{ money(config.minimumVisitGrossUah) }} до {{ number(config.zoneWidthKm) }} км включно; + {{ money(config.additionalZoneGrossUah) }} за кожну наступну зону.</td><td>Стала ціна всередині зони; стрибок на межі зони.</td><td>Базу виїзду та доплату за зону.</td></tr>
+    </tbody></table></div>
+    <p><strong>Спільне для обох моделей:</strong> до виїзду додається робота — {{ number(config.minimumHours) }} год × {{ money(config.hourlyGrossUah) }}. ПДВ вже включений. Для кожної адреси показуємо всі міста відправлення; найдешевший варіант автоматично не обираємо.</p>
+    <p class="decision-note"><strong>Питання для погодження:</strong> формула однакова для всіх замовників, але відстань залежить від міста виїзду. Для ціни, незалежної від розміщення інженерів, потрібно зафіксувати розрахункові бази та правило їх вибору або визначити територіальні зони.</p>
+  </section>
+  <div class="demo-strip no-print"><div><strong>Перевірка без введення адрес</strong><span>Завантажує 2 адреси й умовні відстані з {{ config.cities.length }} міст. Після цього перемкніть модель та порівняйте ті самі маршрути.</span></div><button :disabled="state.loading" @click="loadDemo">Завантажити приклад</button></div>
   <div class="workspace no-print">
     <section class="locations-card" aria-labelledby="locations-title">
-      <div class="card-heading"><div><span class="section-kicker">КРОК 01</span><h2 id="locations-title">Де потрібен сервіс?</h2></div><span class="counter">{{ String(state.locations.length).padStart(2, '0') }}</span></div>
+      <div class="card-heading"><div><span class="section-kicker">КРОК 01</span><h2 id="locations-title">Адреси для розрахунку</h2></div><span class="counter">{{ String(state.locations.length).padStart(2, '0') }}</span></div>
       <p class="card-description">Кожна адреса — окремий виїзд інженера.</p>
       <div class="location-list">
         <div v-for="(location, index) in state.locations" :key="location.id" class="location-item">
@@ -71,17 +82,16 @@ function print() { window.print() }
       <p v-if="state.error" class="alert error" role="alert">{{ state.error }}</p>
     </section>
     <aside class="tariff-card" aria-labelledby="tariff-title">
-      <div class="tariff-top"><span class="section-kicker">ЯК ЦЕ ПРАЦЮЄ</span><span class="tariff-symbol" aria-hidden="true">{{ isKm ? '↔' : '▥' }}</span></div>
-      <h2 id="tariff-title">{{ isKm ? 'Кожен кілометр —\nза єдиним тарифом.' : 'Більша відстань —\nнаступна зона.' }}</h2>
+      <div class="tariff-top"><span class="section-kicker">ПАРАМЕТРИ ПОТОЧНОЇ МОДЕЛІ</span><span class="tariff-symbol" aria-hidden="true">{{ isKm ? '↔' : '▥' }}</span></div>
+      <h2 id="tariff-title">{{ isKm ? 'Кілометровий тариф' : 'Зональний тариф' }}</h2>
       <div class="tariff-price">{{ isKm ? number(config.perKmGrossUah) : number(config.minimumVisitGrossUah) }}<span>{{ isKm ? 'грн / км' : 'грн / перша зона' }}</span></div>
       <p class="tariff-note">{{ isKm ? 'Враховуємо дорогу туди й назад.' : `До ${number(config.zoneWidthKm)} км в один бік включно.` }}</p>
       <div class="tariff-details"><div><span>Мінімальний виїзд</span><strong>{{ money(config.minimumVisitGrossUah) }}</strong></div><div v-if="!isKm"><span>Кожна наступна зона</span><strong>+ {{ money(config.additionalZoneGrossUah) }}</strong></div><div><span>Мінімум роботи</span><strong>{{ number(config.minimumHours) }} год × {{ money(config.hourlyGrossUah) }}</strong></div></div>
       <div class="vat-note"><span>✓</span> Усі тарифи включають ПДВ {{ vatPercent }}%</div>
     </aside>
   </div>
-  <div class="demo-strip no-print"><span class="demo-icon" aria-hidden="true">✧</span><div><strong>Спочатку подивитися на прикладі?</strong><span>Дві локації, усі міста інженерів і готовий розрахунок.</span></div><button :disabled="state.loading" @click="loadDemo">Відкрити демоприклад <span>→</span></button></div>
   <section class="results" :class="{ 'empty-results': !hasResults }" aria-labelledby="results-title" aria-live="polite" :aria-busy="state.loading">
-    <div class="results-heading"><div><span class="section-kicker">{{ hasResults ? 'ВАШ РОЗРАХУНОК' : 'КРОК 02' }}</span><h2 id="results-title">{{ hasResults ? 'Варіанти сервісного виїзду' : 'Тут буде ваш розрахунок' }}</h2></div><button v-if="hasResults" class="print-button no-print" :disabled="state.loading || !successfulCount" @click="print"><span aria-hidden="true">↓</span> Друк / Зберегти PDF</button></div>
+    <div class="results-heading"><div><span class="section-kicker">{{ hasResults ? 'РЕЗУЛЬТАТИ' : 'РОЗРАХУНОК' }}</span><h2 id="results-title">{{ hasResults ? 'Варіанти сервісного виїзду' : 'Результати розрахунку' }}</h2></div><button v-if="hasResults" class="print-button no-print" :disabled="state.loading || !successfulCount" @click="print"><span aria-hidden="true">↓</span> Друк / Зберегти PDF</button></div>
     <template v-if="hasResults">
       <div class="report-meta"><span>{{ isKm ? 'За кілометражем' : 'За зонами' }} · {{ config.version }}</span><span>{{ state.calculatedAt }}</span></div>
       <p v-if="state.demo" class="alert demo-alert"><strong>Демонстраційний приклад.</strong> Відстані умовні, задані для перевірки інтерфейсу; вони не отримані з маршрутного API.</p>
@@ -101,6 +111,6 @@ function print() { window.print() }
     </template>
     <div v-else class="empty-state no-print"><span class="empty-route" aria-hidden="true">◎ ┄┄┄ ↗</span><p>Додайте адресу, щоб побачити всі варіанти<br>та зберегти деталізований звіт у PDF.</p><span class="empty-chips"><span>Відстань</span><span>Виїзд</span><span>Робота</span><span>ПДВ</span></span></div>
   </section>
-  <div class="bottom-notes no-print"><p><span>01 /</span> Відстань автомобільним маршрутом.<br>Відлік від міста інженера.</p><p><span>02 /</span> Окремий розрахунок на кожну адресу.<br>Без об’єднання маршрутів.</p><p><span>03 /</span> Попередня вартість для планування.<br>Не є публічною офертою.</p></div>
+  <DemoGuide :config="config" :model="model" />
   <p class="attribution">Маршрутні дані: <a href="https://www.geoapify.com/" target="_blank" rel="noreferrer">Powered by Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap contributors</a></p>
 </template>
