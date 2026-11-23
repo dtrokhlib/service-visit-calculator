@@ -2,13 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { getDistances, parseMatrix, searchAddresses } from '../src/lib/geoapify'
 import { parseConfig } from '../src/lib/calculator'
 import raw from '../public/config.json'
-const cities = parseConfig(raw).cities.slice(0, 2)
+const cities = parseConfig(raw).representations.HAAS.slice(0, 2)
 afterEach(() => vi.unstubAllGlobals())
 describe('маршрутний адаптер', () => {
   it('переставляє осі з міста → адреси, зберігає нуль і недоступні маршрути', () => {
     expect(parseMatrix({ sources_to_targets: [[{ distance: 0 }, { distance: 150001 }], [null, { distance: null }]] }, cities, 2)).toEqual([
-      [{ cityId: 'kyiv', km: 0 }, { cityId: 'lviv', km: null }],
-      [{ cityId: 'kyiv', km: 150.001 }, { cityId: 'lviv', km: null }],
+      [{ cityId: 'kyiv', km: 0 }, { cityId: 'drohobych', km: null }],
+      [{ cityId: 'kyiv', km: 150.001 }, { cityId: 'drohobych', km: null }],
     ])
   })
   it('відхиляє неповну відповідь', () => expect(() => parseMatrix({ sources_to_targets: [[]] }, cities, 2)).toThrow())

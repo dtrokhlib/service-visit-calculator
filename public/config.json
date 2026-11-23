@@ -1,19 +1,101 @@
 {
   "version": "Демо · 2026.1",
-  "demoCities": true,
   "currency": "UAH",
   "perKmGrossUah": 24,
-  "minimumVisitGrossUah": 10000,
-  "hourlyGrossUah": 2226,
-  "minimumHours": 3,
-  "zoneWidthKm": 150,
-  "additionalZoneGrossUah": 5000,
+  "minimumVisitGrossUah": 9600,
   "vatRate": 0.2,
-  "cities": [
-    {"id": "kyiv", "name": "Київ", "coordinates": [30.5234, 50.4501]},
-    {"id": "lviv", "name": "Львів", "coordinates": [24.0316, 49.8429]},
-    {"id": "kharkiv", "name": "Харків", "coordinates": [36.2304, 49.9935]},
-    {"id": "dnipro", "name": "Дніпро", "coordinates": [35.0462, 48.4647]},
-    {"id": "odesa", "name": "Одеса", "coordinates": [30.7233, 46.4825]}
-  ]
+  "representations": {
+    "HAAS": [
+      {
+        "id": "kyiv",
+        "name": "Київ",
+        "coordinates": [
+          30.5234,
+          50.4501
+        ]
+      },
+      {
+        "id": "drohobych",
+        "name": "Дрогобич",
+        "coordinates": [
+          23.505,
+          49.35
+        ]
+      },
+      {
+        "id": "kharkiv",
+        "name": "Харків",
+        "coordinates": [
+          36.2304,
+          49.9935
+        ]
+      },
+      {
+        "id": "vinnytsia",
+        "name": "Вінниця",
+        "coordinates": [
+          28.4682,
+          49.2331
+        ]
+      },
+      {
+        "id": "uzhhorod",
+        "name": "Ужгород",
+        "coordinates": [
+          22.2879,
+          48.6208
+        ]
+      },
+      {
+        "id": "mykolaiv",
+        "name": "Миколаїв",
+        "coordinates": [
+          31.9946,
+          46.975
+        ]
+      },
+      {
+        "id": "novovolynsk",
+        "name": "Нововолинськ",
+        "coordinates": [
+          24.1627,
+          50.7258
+        ]
+      },
+      {
+        "id": "bila-tserkva",
+        "name": "Біла Церква",
+        "coordinates": [
+          30.1121,
+          49.7968
+        ]
+      }
+    ],
+    "SWD": [
+      {
+        "id": "kyiv",
+        "name": "Київ",
+        "coordinates": [
+          30.5234,
+          50.4501
+        ]
+      },
+      {
+        "id": "dnipro",
+        "name": "Дніпро",
+        "coordinates": [
+          35.0462,
+          48.4647
+        ]
+      },
+      {
+        "id": "kharkiv",
+        "name": "Харків",
+        "coordinates": [
+          36.2304,
+          49.9935
+        ]
+      }
+    ]
+  }
 }

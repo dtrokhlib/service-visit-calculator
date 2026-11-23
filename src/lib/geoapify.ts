@@ -11,7 +11,7 @@ async function request(url: string, init?: RequestInit) {
   return response.json()
 }
 export async function searchAddresses(text: string, key: string, signal: AbortSignal): Promise<Address[]> {
-  const params = new URLSearchParams({ text, apiKey: key, lang: 'uk', filter: 'countrycode:ua', limit: '5', format: 'json' })
+  const params = new URLSearchParams({ text, apiKey: key, lang: 'uk', type: 'city', filter: 'countrycode:ua', limit: '5', format: 'json' })
   const data = await request(`https://api.geoapify.com/v1/geocode/autocomplete?${params}`, { signal })
   if (!Array.isArray(data.results)) throw new Error('Некоректна відповідь сервісу адрес.')
   return data.results.filter((r: Record<string, unknown>) => typeof r.formatted === 'string' && Number.isFinite(r.lon) && Number.isFinite(r.lat))
