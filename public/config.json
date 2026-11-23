@@ -97,5 +97,14 @@
         ]
       }
     ]
+  },
+  "zones": {
+    "firstZoneMaxKm": 100,
+    "thirdZoneFromKm": 500,
+    "multipliers": [
+      1,
+      2,
+      3
+    ]
   }
 }

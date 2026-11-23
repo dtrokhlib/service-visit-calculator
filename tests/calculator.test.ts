@@ -7,3 +7,5 @@ it('цілі суми і округлення вгору',()=>{for(let m=199900;
 it.each([-1,NaN,Infinity])('відхиляє %s',km=>expect(()=>calculate(km,config)).toThrow())
 it('списки представництв',()=>{expect(config.representations.HAAS).toHaveLength(8);expect(config.representations.SWD.map(c=>c.name)).toEqual(['Київ','Дніпро','Харків'])})
 it('відхиляє некоректні параметри',()=>{expect(()=>parseConfig({...raw,vatRate:0.1})).toThrow();expect(()=>parseConfig({...raw,perKmGrossUah:-1})).toThrow();expect(()=>parseConfig({...raw,representations:{HAAS:[],SWD:[]}})).toThrow()})
+it.each([[0,9600],[100,9600],[100.001,19200],[499.999,19200],[500,28800],[5000,28800]])('зони на %s км',(km,total)=>{const p=calculate(km,config,'zones');expect(p.total).toBe(total);expect(p.net+p.vat).toBe(total);expect(Number.isInteger(p.net)).toBe(true)})
+it('зони використовують конфігурацію і не додаються до кілометрового тарифу',()=>{const c={...config,minimumVisitGrossUah:12000};expect(calculate(300,c,'zones').total).toBe(24000);expect(calculate(300,c,'kilometers').total).toBe(14400);expect(()=>parseConfig({...raw,zones:{...raw.zones,thirdZoneFromKm:50}})).toThrow()})
